@@ -5,6 +5,7 @@ message worker flow, just disctribe related tools simple use
 ###zookeeper
 * Download file from [apache zookeeper](http://zookeeper.apache.org/doc/trunk/zookeeperStarted.html#sc_Download)
 * Simply,just unzip and excute `bin/zkServer.sh start`,config value is default,port is __2181__
+
 > server address is 192.168.56.4:2181
 
 ###kafka
@@ -15,16 +16,17 @@ message worker flow, just disctribe related tools simple use
 2. copy to dest server, in my example is `192.168.56.6`
 3. unzip file `tar zxvf kafka_2.9.2-0.8.1.1.tgz`
 4. modify __config/server.server.properties__ under dirrctory of kafka
-   * `zookeeper.connect=192.168.56.4:2181`;
-   * `log.dirs=/tmp/kafka-logs` multy directory comma split
-   *  `host.name=192.168.56.6` __Don't config this value, this brings exception when use storm-kafka to get message (To do find why)__
-   * `port=9092` 
+
+        zookeeper.connect=192.168.56.4:2181;
+        log.dirs=/tmp/kafka-logs (multi directory comma split)
+        host.name=192.168.56.6  __If you have not set this value, this brings exception when use storm-kafka to get message ( next to  find why)__
+        port=9092
    
- 5. `bin/kafka-server-start.sh config/server.properties `
- 6. test,if flow operation is success,kafka install is success
+5. `bin/kafka-server-start.sh config/server.properties `
+6. test,if flow operation is success,kafka install is success
     *  `bin/kafka-topics.sh --create --zookeeper 192.168.56.4:2181 --replication-factor 1 --partitions 1 --topic test`
-    *  `bin/kafka-console-producer.sh --broker-list 192.168.56.6:9092 --topic test` you can input some word 
-    * `bin/kafka-console-consumer.sh --zookeeper 192.168.56.4:2181 --topic test --from-beginning` , then the console display the word you imput
+    *  `bin/kafka-console-producer.sh --broker-list 192.168.56.6:9092 --topic test`, just input some words 
+    * `bin/kafka-console-consumer.sh --zookeeper 192.168.56.4:2181 --topic test --from-beginning` , then the console will display the word you imput
     
 ###storm
 ####Enviroment deploy(192.168.56.5 and 192.168.56.6)
@@ -44,7 +46,9 @@ message worker flow, just disctribe related tools simple use
            - 6700
            - 6701
            
-5. Now, you can submit toplog to storm cluster, storm supplys some example, the wordcount is the simplets, you may find the jar in examples directory under  the storm path, in my computer, excute `torm jar $Path/examples/storm-starter/storm-starter-topologies-0.9.2-incubating.jar storm.starter.WordCountTopology wordCount`, then open the ui you may find this topology named __wordCount__
+5. Now, you can submit toplog to storm cluster, storm has supplied some examples, like the wordcount is the simplets, find the jar in examples directory underthe storm path, in my computer, excute commend bellow, then open the ui you may find this topology named __wordCount__
+
+        `storm jar $Path/examples/storm-starter/storm-starter-topologies-0.9.2-incubating.jar storm.starter.WordCountTopology wordCount`
 
 > important, you must add arg at last, otherwise the topolog is excuted in local mode;
 
@@ -63,14 +67,18 @@ Now I just use kafka-console-producer producing message
 
 ####Exceptions
 1. `Exception in thread "main" java.lang.NoClassDefFoundError`, solution :
->1. copy dependency jars to every serve's directory of storm PATH `lib` (recomended)
-    2. Include the dependency jar in your own jar( your own jar become larger and larger)
+
+        1. copy dependency jars to every serve's directory of storm PATH `lib` (recomended)
+        2. Include the dependency jar in your own jar( your own jar become larger and larger)
+    
 2. `ERROR backtype.storm.util - Async loop died!
-java.lang.RuntimeException: java.nio.channels.UnresolvedAddressException`, solution:         
-> Just mesioned before, can't find kafka broker host name, you must edit the server.propertis where `host.name` is your server ip
-3. `java.lang.RuntimeException: java.lang.ClassCastException: [B cannot be cast to java.lang.String`, when I display every message received, solution is :
-> Message received is byte array , the message have to decode:
-> `spoutConfig.scheme = new SchemeAsMultiScheme(new StringScheme());`
+java.lang.RuntimeException: java.nio.channels.UnresolvedAddressException`, solution: 
+
+        Just mesioned before, can't find kafka broker host name, you must edit the server.propertis where `host.name` is your server ip
+
+3. `java.lang.RuntimeException: java.lang.ClassCastException: [B cannot be cast to java.lang.String`, when I display every message received, message received is byte array , the message have to decode:
+
+        spoutConfig.scheme = new SchemeAsMultiScheme(new StringScheme());
 
 #### Different from previous version
 * the method `forceStartOffsetTime` is delated, instead you can change the field `forceFromStart` of spoutConfig, default value is false(It means get message from latest offset)
